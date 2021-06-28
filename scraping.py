@@ -1,6 +1,7 @@
 # Import Splinter, BeautifulSoup, and Pandas
+from os import link
 from splinter import Browser
-from bs4 import BeautifulSoup as soup
+from bs4 import BeautifulSoup as soup, element
 import pandas as pd
 import datetime as dt
 from webdriver_manager.chrome import ChromeDriverManager
@@ -12,14 +13,19 @@ def scrape_all():
     browser = Browser('chrome', **executable_path, headless=True)
 
     news_title, news_paragraph = mars_news(browser)
-
+    #img_url = featured_image(browser)
+    #facts = mars_facts()
+    #hemisphere_image_urls = hemishere(browser)
+    #timestamp = dt.datetime.now()
+    
     # Run all scraping functions and store results in a dictionary
     data = {
         "news_title": news_title,
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
-        "last_modified": dt.datetime.now()
+        "last_modified": dt.datetime.now(),
+        "hemisphere": hemishere(browser)
     }
 
     # Stop webdriver and return data
@@ -96,6 +102,37 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
+
+def hemishere(browser):
+    # Visit URL
+    url = 'https://marshemispheres.com/'
+    browser.visit(url)
+    
+    # Add try/except for error handling
+    try:
+        hemisphere_image_urls = []
+
+        links = browser.find_by_css('a.product-item img')
+        title = browser.find_by_css('h3.title')
+
+        for image in range(len(links)):
+            hemisphere = {}
+            browser.find_by_css('a.product-item img')[image].click()
+            sample_elem = browser.links.find_by_text('Sample').first
+            hemisphere['img_url'] = sample_elem['href']
+            hemisphere['title'] = browser.find_by_css('h2.title').text
+            hemisphere_image_urls.append(hemisphere)
+            browser.back()
+
+    except BaseException:
+        return None
+
+    return hemisphere_image_urls
+  
+#hemishere = {
+    #'titles': titles,
+    #"sample": sample}
+    #return hemishere
 
 if __name__ == "__main__":
 
